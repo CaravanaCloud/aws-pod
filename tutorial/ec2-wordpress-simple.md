@@ -1,4 +1,4 @@
-# Wordpress on EC2
+# Wordpress on EC2 - Simples
 
 ## Prepare Web Server
 
