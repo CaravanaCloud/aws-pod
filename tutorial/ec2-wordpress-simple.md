@@ -34,16 +34,16 @@ mysql -uroot pMasterkey123 -h127.0.0.1
 
 Create application user:
 ```
-CREATE USER 'wordpress-user'@'%' IDENTIFIED BY 'Wordkey123';
+CREATE USER 'wpuser'@'%' IDENTIFIED BY 'Wordkey123';
 CREATE DATABASE `wordpressdb`;
-GRANT ALL PRIVILEGES ON `wordpressdb`.* TO "wordpress-user"@"%";
+GRANT ALL PRIVILEGES ON `wordpressdb`.* TO "wpuser"@"%";
 FLUSH PRIVILEGES;
 exit;
 ```
 
 Check application user:
 ```
-mysql -uwordpress-user -pWordkey123 -h127.0.0.1 wordpressdb
+mysql -uwpuser -pWordkey123 -h127.0.0.1 wordpressdb
 ```
 
 ## Setup Wordpress
