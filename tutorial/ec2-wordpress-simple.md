@@ -12,21 +12,12 @@ Install required packages:
 yum -y update all
 amazon-linux-extras enable php8.0
 yum -y clean metadata
-yum -y install httpd php php-gd php-mysqlnd mariadb mariadb-server
+yum -y install httpd php php-gd php-mysqlnd mariadb
 ```
 
-Edit httpd configuration:
+If you need a local database server:
 ```
-sudo vim /etc/httpd/conf/httpd.conf
-```
-So that served directory allow .htaccess overides:
-```
-/var/www/html -> AllowOverride All
-```
-
-Restart httpd
-```
-service httpd start
+mariadb-server
 ```
 
 ## Setup Database
@@ -43,19 +34,33 @@ mysql -uroot pMasterkey123 -h127.0.0.1
 
 Create application user:
 ```
-CREATE USER 'wordpress-user'@'localhost' IDENTIFIED BY 'Wordkey123';
-CREATE DATABASE `wordpress-db`;
-GRANT ALL PRIVILEGES ON `wordpress-db`.* TO "wordpress-user"@"localhost";
+CREATE USER 'wordpress-user'@'%' IDENTIFIED BY 'Wordkey123';
+CREATE DATABASE `wordpressdb`;
+GRANT ALL PRIVILEGES ON `wordpressdb`.* TO "wordpress-user"@"%";
 FLUSH PRIVILEGES;
 exit;
 ```
 
 Check application user:
 ```
-mysql -uwordpress-user -pWordkey123 -h127.0.0.1 wordpress-db
+mysql -uwordpress-user -pWordkey123 -h127.0.0.1 wordpressdb
 ```
 
 ## Setup Wordpress
+Edit httpd configuration:
+```
+sudo vim /etc/httpd/conf/httpd.conf
+```
+So that served directory allow .htaccess overides:
+```
+/var/www/html -> AllowOverride All
+```
+
+Restart httpd
+```
+service httpd start
+```
+
 Donwload and uncompress:
 ```
 wget https://wordpress.org/latest.tar.gz
