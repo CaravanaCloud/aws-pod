@@ -11,8 +11,8 @@ Install required packages:
 ```
 yum -y update all
 amazon-linux-extras enable php8.0
-yum clean metadata
-yum install httpd php php-gd php-mysqlnd mariadb mariadb-server
+yum -y clean metadata
+yum -y install httpd php php-gd php-mysqlnd mariadb mariadb-server
 ```
 
 Edit httpd configuration:
