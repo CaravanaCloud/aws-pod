@@ -32,10 +32,15 @@ Connect to the database:
 mysql -uroot pMasterkey123 -h127.0.0.1
 ```
 
+Create database if needed:
+```
+CREATE DATABASE `wordpressdb`;
+```
+
+
 Create application user:
 ```
 CREATE USER 'wpuser'@'%' IDENTIFIED BY 'Wordkey123';
-CREATE DATABASE `wordpressdb`;
 GRANT ALL PRIVILEGES ON `wordpressdb`.* TO "wpuser"@"%";
 FLUSH PRIVILEGES;
 exit;
