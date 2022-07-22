@@ -2,16 +2,19 @@ package multiverse.rs;
 
 import io.quarkus.qute.TemplateInstance;
 import io.quarkus.qute.Template;
+
+import javax.inject.Inject;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 
 @Path("/")
 public class IndexResource{
     @Inject
-    Template indexTpl;
+    Template index;
 
     @GET
-    @Produces(MediaType)
-    public void getIndex(){
-        
+    @Produces(MediaType.TEXT_HTML)
+    public TemplateInstance getIndex(){
+        return index.instance();
     }
 }

@@ -1,0 +1,58 @@
+name: Build a new release from tag
+
+on:
+  workflow_dispatch: {}
+  push:
+    tags:
+      - 'v*'
+
+env:
+  REF_NAME: ${{ github.ref_name }}
+  GRAALVM_VERSION: '22.0.0.2'
+  GRAALVM_JAVA: 'java17'
+  GRAALVM_ARCH: 'amd64'
+  PKG_VERSION: "1.0"
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      - uses: DeLaGuardo/setup-graalvm@5.0
+        with:
+          graalvm: ${{ env.GRAALVM_VERSION }}
+          java: ${{ env.GRAALVM_JAVA }}
+          arch: ${{ env.GRAALVM_ARCH }}
+
+      - name: Build uberjar
+        env:
+          MVN_FLAGS: -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+          QUARKUS_PACKAGE_TYPE: uber-jar
+        run: ./mvnw $MVN_FLAGS package
+
+      - name: Debug
+        run: find .
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          draft: false
+          prerelease: false
+
+      - name: Upload JAR
+        id: upload-release-jar
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./target/demo-multiverse-1.0.0-SNAPSHOT-runner.jar
+          asset_name: demo-multiverse-1.0.0-SNAPSHOT-runner.jar
+          asset_content_type: application/java-archive
