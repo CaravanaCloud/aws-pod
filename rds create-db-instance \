@@ -1,0 +1,30 @@
+{
+    "DBSubnetGroup": {
+        "DBSubnetGroupName": "netgrp-multiversex",
+        "DBSubnetGroupDescription": "Telemo RDS Subnet Group",
+        "VpcId": "vpc-081a9520f348bed8e",
+        "SubnetGroupStatus": "Complete",
+        "Subnets": [
+            {
+                "SubnetIdentifier": "subnet-09e54399a63404c11",
+                "SubnetAvailabilityZone": {
+                    "Name": "ap-northeast-1c"
+                },
+                "SubnetOutpost": {},
+                "SubnetStatus": "Active"
+            },
+            {
+                "SubnetIdentifier": "subnet-05196ecece28d39f0",
+                "SubnetAvailabilityZone": {
+                    "Name": "ap-northeast-1a"
+                },
+                "SubnetOutpost": {},
+                "SubnetStatus": "Active"
+            }
+        ],
+        "DBSubnetGroupArn": "arn:aws:rds:ap-northeast-1:269733383066:subgrp:netgrp-multiversex",
+        "SupportedNetworkTypes": [
+            "IPV4"
+        ]
+    }
+}
