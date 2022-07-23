@@ -30,7 +30,7 @@ jobs:
         env:
           MVN_FLAGS: -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
           QUARKUS_PACKAGE_TYPE: uber-jar
-        run: ./mvnw $MVN_FLAGS package
+        run: ./src/demo-multiverse/mvnw -f ./src/demo-multiverse/pom.xml $MVN_FLAGS package
 
       - name: Debug
         run: find .
