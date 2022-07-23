@@ -242,7 +242,7 @@ Create VPC
     --query "DBInstances[0].Endpoint.Port"\
     --output text)
 
-    RDS_JDBC=jdbc:mysql://$RDS_ENDPOINT:$RDS_PORT/$RDS_DB
+    RDS_JDBC="jdbc:mysql://$RDS_ENDPOINT:$RDS_PORT/$RDS_DB?useSSL=false"
     
     echo RDS_JDBC=$RDS_JDBC
     
@@ -270,8 +270,8 @@ Create VPC
     APP_CIDR=0.0.0.0/0
 
     APP_SECG=$(aws ec2 create-security-group \
-        --group-name "app-secgrp-$UNIQ" \
-        --description "app-secgrp-$UNIQ" \
+        --group-name "secg-app-$UNIQ" \
+        --description "secg-app-$UNIQ" \
         --vpc-id $VPC_ID \
         --query "GroupId" \
         --output text)
@@ -279,7 +279,7 @@ Create VPC
     echo APP_SECG=$APP_SECG
 
     APP_SECG_ID=$(aws ec2 describe-security-groups \
-        --filter Name=vpc-id,Values=$VPC_ID Name=group-name,Values=telemo-rds-secgrp \
+        --filter Name=vpc-id,Values=$VPC_ID Name=group-name,Values=secg-app-$UNIQ \
         --query 'SecurityGroups[*].[GroupId]' \
         --output text)
             
@@ -338,14 +338,67 @@ Create VPC
     echo  "https://$AWS_REGION.console.aws.amazon.com/systems-manager/session-manager/$INSTANCE_ID?region=$AWS_REGION"
     ```
 
-1. Install Java
+1. Save config
+    
+    This is your future env file:
     ```
-    curl -s "https://get.sdkman.io" | bash
-    source "/home/ssm-user/.sdkman/bin/sdkman-init.sh"
-    sdk install java 22.1.0.r17-grl
-    ```
+    echo -e "QUARKUS_DATASOURCE_DB_KIND=mysql\n"\
+"QUARKUS_DATASOURCE_USERNAME=$RDS_APP_USER\n"\
+"QUARKUS_DATASOURCE_PASSWORD=$RDS_APP_PASSWORD\n"\
+"QUARKUS_DATASOURCE_JDBC_URL=$RDS_JDBC" | tee .env-remote
 
-1. Install the application demo-multiverse
+    ```
+1. Install Java and App
+    ```
+    sudo su - ec2-user
+    
+    APP_JAR_URL=https://github.com/CaravanaCloud/aws-pod/releases/download/v1.0.20220723105446/demo-multiverse-1.0.0-SNAPSHOT-runner.jar
+    APP_DIR=/home/ec2-user/demo-multiverse
+    APP_JAR_FILE=$APP_DIR/demo-multiverse-1.0.0-SNAPSHOT-runner.jar
+    APP_ENV_FILE=$APP_DIR/.env
+
+    
+    curl -s "https://get.sdkman.io" | bash
+    source "/home/ec2-user/.sdkman/bin/sdkman-init.sh"
+    sdk install java 22.1.0.r17-grl
+
+    mkdir -p $APP_DIR
+    curl -Ls $APP_JAR_URL --output $APP_JAR_FILE
+    ls -liah $APP_JAR_FILE
     ```
     
+    Check environment configuration
     ```
+    echo vi $APP_ENV_FILE
+    cat $APP_ENV_FILE
+    ```
+
+    Test app
+    ```
+    java -jar $APP_JAR_FILE
+    ```
+
+    Use this to start app as ec2-user
+    Add it to rc.local file
+    ```
+    sudo -u ec2-user bash -c 'pushd /home/ec2-user/demo-multiverse/ && /home/ec2-user/.sdkman/candidates/java/current/bin/java -jar /home/ec2-user/demo-multiverse/demo-multiverse-1.0.0-SNAPSHOT-runner.jar && popd'
+    ```
+
+    ```
+    sudo -s
+    vi /etc/rc.d/rc.local
+    chmod +x /etc/rc.d/rc.local
+    ```
+
+    ```
+    sudo reboot
+    ```
+
+    1. Create Image
+    1. Create Target Group
+    1. Create Load Balancer
+    1. Create Launch Template
+    1. Create Auto-Scaling Group
+    1. Create Route53 Record
+    1. Create Route53 Health Check
+    
