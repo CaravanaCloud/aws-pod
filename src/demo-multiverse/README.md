@@ -50,10 +50,6 @@ If you want to learn more about building native executables, please consult http
 ## Deploying on AWS using the AWS CLI
 
 ### (Optional) Tools Preferences
-1. Start tmux session
-    ```
-    tmux new -s multiverse
-    ```
 1. AWS Cli Preferences
     ```
     export AWS_PAGER=""
@@ -65,7 +61,8 @@ If you want to learn more about building native executables, please consult http
 
 1. Set a unique identifier for resources
     ```
-    UNIQ="multiversex"
+    UNIQ="multiverse$RANDOM"
+    echo $UNIQ
     ```
 1. Check AWS Authentication
     ```
@@ -167,6 +164,7 @@ Create VPC
     ```
 ### Setup Relational Database
 1. Setup RDS Database Instance
+    Define variables
     ```
     RDS_NETGRP=netgrp-$UNIQ
     RDS_NAME=rds-$UNIQ
@@ -179,81 +177,100 @@ Create VPC
     RDS_DB=multiversedb
     RDS_INSTANCE_TYPE=db.t3.micro
     ```
+
+    Create RDS networking elements:
     ```
     RDS_SECG=$(aws ec2 create-security-group \
-    --group-name telemo-rds-secgrp \
-    --description "telemo-rds-secg" \
-    --vpc-id $VPC_ID \
-    --query "GroupId" \
-    --output text)
+        --group-name telemo-rds-secgrp \
+        --description "telemo-rds-secg" \
+        --vpc-id $VPC_ID \
+        --query "GroupId" \
+        --output text)
 
     echo RDS_SECG=$RDS_SECG
 
     RDS_SECG_ID=$(aws ec2 describe-security-groups \
-    --filter Name=vpc-id,Values=$VPC_ID Name=group-name,Values=telemo-rds-secgrp \
-    --query 'SecurityGroups[*].[GroupId]' \
-    --output text)
-        
+        --filter Name=vpc-id,Values=$VPC_ID Name=group-name,Values=telemo-rds-secgrp \
+        --query 'SecurityGroups[*].[GroupId]' \
+        --output text)
+            
     echo RDS_SECG_ID=$RDS_SECG_ID
         
     aws ec2 authorize-security-group-ingress \
-    --group-id $RDS_SECG \
-    --protocol tcp \
-    --port $RDS_PORT \
-    --cidr $RDS_CIDR
+        --group-id $RDS_SECG \
+        --protocol tcp \
+        --port $RDS_PORT \
+        --cidr $RDS_CIDR
 
     aws rds create-db-subnet-group \
         --db-subnet-group-name $RDS_NETGRP \
         --db-subnet-group-description "Telemo RDS Subnet Group" \
         --subnet-ids $NET_A $NET_B        
     ```
+
+    Create RDS Database Instances
     ```
     RDS_ID=$(aws rds create-db-instance \
-    --db-name $RDS_DB  \
-    --db-instance-identifier $RDS_NAME \
-    --allocated-storage 20 \
-    --db-instance-class $RDS_INSTANCE_TYPE \
-    --engine mysql \
-    --engine-version 8.0 \
-    --master-username $RDS_ROOT_USER \
-    --master-user-password $RDS_ROOT_PASSWORD \
-    --db-subnet-group-name  $RDS_NETGRP \
-    --backup-retention-period 0 \
-    --publicly-accessible \
-    --vpc-security-group-ids $RDS_SECG_ID \
-    --query "DBInstance.DBInstanceIdentifier" \
-    --output text)
+        --db-name $RDS_DB  \
+        --db-instance-identifier $RDS_NAME \
+        --allocated-storage 20 \
+        --db-instance-class $RDS_INSTANCE_TYPE \
+        --engine mysql \
+        --engine-version 8.0 \
+        --master-username $RDS_ROOT_USER \
+        --master-user-password $RDS_ROOT_PASSWORD \
+        --db-subnet-group-name  $RDS_NETGRP \
+        --backup-retention-period 0 \
+        --publicly-accessible \
+        --vpc-security-group-ids $RDS_SECG_ID \
+        --query "DBInstance.DBInstanceIdentifier" \
+        --output text)
 
     echo RDS_ID=$RDS_ID
     ```
-
+    Wait for database instance to be avaialbe
     ```
-    aws rds wait db-instance-available --db-instance-identifier $RDS_ID && echo done
+    aws rds wait db-instance-available --db-instance-identifier $RDS_ID && echo "Up and running!"
     ```
-
+    
+    Fetch instance address and properties
     ```
     RDS_ENDPOINT=$(aws rds describe-db-instances  \
-    --db-instance-identifier $RDS_ID  \
-    --query "DBInstances[0].Endpoint.Address"  \
-    --output text)
-    
+        --db-instance-identifier $RDS_ID  \
+        --query "DBInstances[0].Endpoint.Address"  \
+        --output text)
+        
     RDS_PORT=$(aws rds describe-db-instances  \
-    --db-instance-identifier $RDS_ID  \
-    --query "DBInstances[0].Endpoint.Port"\
-    --output text)
+        --db-instance-identifier $RDS_ID  \
+        --query "DBInstances[0].Endpoint.Port"\
+        --output text)
 
     RDS_JDBC="jdbc:mysql://$RDS_ENDPOINT:$RDS_PORT/$RDS_DB?useSSL=false"
-    
+        
     echo RDS_JDBC=$RDS_JDBC
-    
-    # Generate SQL query to create application user in database
-    echo -e "\n\
-          CREATE USER '$RDS_APP_USER'@'%' IDENTIFIED BY '$RDS_APP_PASSWORD';\n\
-          GRANT ALL PRIVILEGES ON \`$RDS_DB\`.* TO '$RDS_APP_USER'@'%';\n\
-          FLUSH PRIVILEGES;\n\
-          exit;"
-    
-    mysql -u$RDS_ROOT_USER -p$RDS_ROOT_PASSWORD -h$RDS_ENDPOINT -P $RDS_PORT $RDS_DB
+    ```
+
+    Generate SQL query to create application user in database   
+    ```
+    SQL="CREATE USER '$RDS_APP_USER' IDENTIFIED BY '$RDS_APP_PASSWORD';"
+    SQL="${SQL}GRANT ALL PRIVILEGES ON \`$RDS_DB\`.* TO '$RDS_APP_USER';"
+    echo $SQL
+    ```
+    Connect to database and execute query
+    ```
+    mysql -u$RDS_ROOT_USER -p$RDS_ROOT_PASSWORD -h$RDS_ENDPOINT -P $RDS_PORT  -e "$SQL" $RDS_DB 
+    ```
+    Check application user database access
+    ```
+    mysql -u$RDS_APP_USER -p$RDS_APP_PASSWORD -h$RDS_ENDPOINT -P $RDS_PORT  -e "SELECT DATABASE();" $RDS_DB 
+    ```
+    Create your application environment configuration, to be used in the instances:
+    ```
+    echo -e "QUARKUS_DATASOURCE_DB_KIND=mysql\n"\
+"QUARKUS_DATASOURCE_USERNAME=$RDS_APP_USER\n"\
+"QUARKUS_DATASOURCE_PASSWORD=$RDS_APP_PASSWORD\n"\
+"QUARKUS_DATASOURCE_JDBC_URL=$RDS_JDBC" | tee .env-remote
+    cat .env-remote
     ```
 
 ### Deployment Using Amazon EC2
@@ -263,6 +280,7 @@ Create VPC
         --names /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2 \
         --query "Parameters[0].Value" \
         --output text)
+    echo $AMI_ID 
     ```
 1. Create app instance security group:
     ```
@@ -291,6 +309,7 @@ Create VPC
         --port $APP_PORT \
         --cidr $APP_CIDR
     ```
+
 1. Create instance profile
     ```
     APP_ROLE="role-$UNIQ"
@@ -333,72 +352,201 @@ Create VPC
 
     echo INSTANCE_ID=$INSTANCE_ID
     ```
+    Wait for instance to be up
+    ```
+    aws ec2 wait instance-status-ok --instance-ids $INSTANCE_ID  && echo "Instance up and running!" 
+    ```
 1. Access the instance using SSM
     ```
     echo  "https://$AWS_REGION.console.aws.amazon.com/systems-manager/session-manager/$INSTANCE_ID?region=$AWS_REGION"
     ```
 
-1. Save config
-    
-    This is your future env file:
-    ```
-    echo -e "QUARKUS_DATASOURCE_DB_KIND=mysql\n"\
-"QUARKUS_DATASOURCE_USERNAME=$RDS_APP_USER\n"\
-"QUARKUS_DATASOURCE_PASSWORD=$RDS_APP_PASSWORD\n"\
-"QUARKUS_DATASOURCE_JDBC_URL=$RDS_JDBC" | tee .env-remote
 
-    ```
-1. Install Java and App
+1. Install Java
     ```
     sudo su - ec2-user
-    
+
+    JAVA_VERSION=22.1.0.r17-grl
+    curl -s "https://get.sdkman.io" | bash
+    source "/home/ec2-user/.sdkman/bin/sdkman-init.sh"
+    sdk install java $JAVA_VERSION
+    ```
+1. Download Application
+    ```
     APP_JAR_URL=https://github.com/CaravanaCloud/aws-pod/releases/download/v1.0.20220723105446/demo-multiverse-1.0.0-SNAPSHOT-runner.jar
     APP_DIR=/home/ec2-user/demo-multiverse
     APP_JAR_FILE=$APP_DIR/demo-multiverse-1.0.0-SNAPSHOT-runner.jar
     APP_ENV_FILE=$APP_DIR/.env
-
-    
-    curl -s "https://get.sdkman.io" | bash
-    source "/home/ec2-user/.sdkman/bin/sdkman-init.sh"
-    sdk install java 22.1.0.r17-grl
 
     mkdir -p $APP_DIR
     curl -Ls $APP_JAR_URL --output $APP_JAR_FILE
     ls -liah $APP_JAR_FILE
     ```
     
-    Check environment configuration
+    Edit environment configuration
     ```
-    echo vi $APP_ENV_FILE
+    vi $APP_ENV_FILE
     cat $APP_ENV_FILE
     ```
 
     Test app
     ```
+    cd $APP_DIR
     java -jar $APP_JAR_FILE
     ```
 
     Use this to start app as ec2-user
-    Add it to rc.local file
     ```
     sudo -u ec2-user bash -c 'pushd /home/ec2-user/demo-multiverse/ && /home/ec2-user/.sdkman/candidates/java/current/bin/java -jar /home/ec2-user/demo-multiverse/demo-multiverse-1.0.0-SNAPSHOT-runner.jar && popd'
     ```
 
+    Add it to system initialization
     ```
     sudo -s
     vi /etc/rc.d/rc.local
     chmod +x /etc/rc.d/rc.local
     ```
 
+    Reboot check :)
     ```
     sudo reboot
     ```
 
+    check app:
+    ```
+    INSTANCE_IP=$(curl -s http://instance-data/latest/meta-data/public-ipv4)
+    echo $INSTANCE_IP
+
+    curl -Ls http://$INSTANCE_IP:8080/
+    curl -Ls http://$INSTANCE_IP:8080/_hc
+    ```
+
     1. Create Image
-    1. Create Target Group
-    1. Create Load Balancer
+    ```
+    AMI_NAME=ami-$UNIQ
+    AMI_ID=$(aws ec2 create-image \
+        --instance-id $INSTANCE_ID \
+        --name $AMI_NAME \
+        --query ImageId \
+        --output text)
+    echo AMI_ID=$AMI_ID
+    ```
     1. Create Launch Template
-    1. Create Auto-Scaling Group
-    1. Create Route53 Record
-    1. Create Route53 Health Check
+    ```
+    LT_NAME=lt-$UNIQ
     
+    LT=''
+    LT=${LT}'{"ImageId":"'
+    LT=${LT}$AMI_ID
+    LT=${LT}'","InstanceType":"'
+    LT=${LT}$APP_INSTANCE_TYPE
+    LT=${LT}'","NetworkInterfaces":[{'
+    LT=${LT}'"DeviceIndex":0,'
+    LT=${LT}'"AssociatePublicIpAddress":true,'
+    LT=${LT}'"DeleteOnTermination":true,'
+    LT=${LT}'"Groups":["'
+    LT=${LT}$APP_SECG_ID
+    LT=${LT}'"]'
+    LT=${LT}'}]'
+    LT=${LT}'}'
+    LT=${LT}''
+    echo $LT 
+    echo $LT | jq
+    
+    LT_ID=$(aws ec2 create-launch-template \
+        --launch-template-name "$LT_NAME" \
+        --launch-template-data "$LT" \
+        --query "LaunchTemplate.LaunchTemplateId" \
+        --output text)
+
+    echo LT_ID=$LT_ID
+    ```
+    
+    1. Create Target Group
+    ```
+    TG_NAME=tg-$UNIQ
+
+    TG_ARN=RR$(aws elbv2 create-target-group \
+        --name $TG_NAME \
+        --protocol HTTP \
+        --protocol-version HTTP1 \
+        --port 8080 \
+        --vpc-id $VPC_ID \
+        --health-check-enabled \
+        --health-check-path '/_hc' \
+        --health-check-interval-seconds 30 \
+        --health-check-timeout-seconds 5 \
+        --healthy-threshold-count 3 \
+        --unhealthy-threshold-count 2 \
+        --target-type instance \
+        --query "TargetGroups[0].TargetGroupArn" \
+        --output text)
+ 
+    ```
+
+    1. Create Load Balancer
+    ```
+    ALB_NAME=alb-$UNIQ
+
+    ALB_ARN=$(aws elbv2 create-load-balancer \
+        --name $ALB_NAME \
+        --subnets $NET_A $NET_B \
+        --query "LoadBalancers[0].LoadBalancerArn"
+        --output text)
+
+    aws elbv2 create-listener \
+        --load-balancer-arn $ALB_ARN \
+        --protocol HTTP --port 80  \
+        --default-actions Type=forward,TargetGroupArn=$TG_ARN
+
+    ```
+
+    1. Create Auto-Scaling Group
+    ```
+    ASG_NAME=asg-$UNIQ
+    aws autoscaling create-auto-scaling-group \
+        --auto-scaling-group-name $ASG_NAME \
+        --launch-template LaunchTemplateId=$LT_ID \
+        --min-size 0 \
+        --max-size 4 \
+        --desired-capacity 1 \
+        --availability-zones $AZ1 $AZ2 \
+        --target-group-arns $TG_ARN \
+        --vpc-zone-identifier "$NET_A, $NET_B"
+
+    ```
+
+    1. Terminate instance
+    ```
+    aws ec2 terminate-instances --instance-ids $INSTANCE_ID
+    ```
+    1. (Optional) Create Route53 Record
+    ```
+    ZONE_NAME=id42.cc
+    ZONE_ID=Z04998672H3BXHYZIROP3
+
+    export RECORD_NAME="$UNIQ.$ZONE_NAME"
+    export RECORD_VALUE=$(aws elbv2 describe-load-balancers \
+        --load-balancer-arns $ALB_ARB \
+        --query "LoadBalancers[0].DNSName" \
+        --output text)
+    
+    echo $RECORD_NAME=$RECORD_VALUE 
+    envsubst < templates/route53_cname.tpl.json > .route53_cname.json
+    cat .route53_cname.json
+
+    aws route53 change-resource-record-sets --hosted-zone-id $ZONE_ID --change-batch file://.route53_cname.json
+    ```
+    	
+    
+    1. (Optional) Create Route53 Health Check
+    ```
+    HC_ID=hc-$UNIQ
+    HC_CFG="Port=80,Type=HTTP,ResourcePath=/,FullyQualifiedDomainName=$RECORD_NAME,MeasureLatency=true,Disabled=false"
+
+    echo $HC_CFG
+
+    aws route53 create-health-check \
+        --caller-reference="$HC_ID" \
+        --health-check-config="$HC_CFG" 
+    ```
