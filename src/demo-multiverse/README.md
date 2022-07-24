@@ -360,8 +360,6 @@ Create VPC
     ```
     echo  "https://$AWS_REGION.console.aws.amazon.com/systems-manager/session-manager/$INSTANCE_ID?region=$AWS_REGION"
     ```
-
-
 1. Install Java
     ```
     sudo su - ec2-user
@@ -484,24 +482,52 @@ Create VPC
  
     ```
 
-    1. Create Load Balancer
+1. Create Load Balancer Security Group
+```
+    ALB_PORT=8080
+    ALB_CIDR=0.0.0.0/0
+
+    ALB_SECG=$(aws ec2 create-security-group \
+        --group-name "secg-alb-$UNIQ" \
+        --description "secg-alb-$UNIQ" \
+        --vpc-id $VPC_ID \
+        --query "GroupId" \
+        --output text)
+
+    echo ALB_SECG=$ALB_SECG
+
+    ALB_SECG_ID=$(aws ec2 describe-security-groups \
+        --filter Name=vpc-id,Values=$VPC_ID Name=group-name,Values=secg-app-$UNIQ \
+        --query 'SecurityGroups[*].[GroupId]' \
+        --output text)
+            
+    echo ALB_SECG_ID=$ALB_SECG_ID
+            
+    aws ec2 authorize-security-group-ingress \
+        --group-id $ALB_SECG \
+        --protocol tcp \
+        --port $ALB_PORT \
+        --cidr $ALB_CIDR
+    ```
+1. Create Load Balancer
     ```
     ALB_NAME=alb-$UNIQ
 
     ALB_ARN=$(aws elbv2 create-load-balancer \
         --name $ALB_NAME \
         --subnets $NET_A $NET_B \
+        --security-groups $ALB_
         --query "LoadBalancers[0].LoadBalancerArn"
         --output text)
 
     aws elbv2 create-listener \
-        --load-balancer-arn $ALB_ARN \
+        --load-balancer-arn $ALB_SECG_ID \
         --protocol HTTP --port 80  \
         --default-actions Type=forward,TargetGroupArn=$TG_ARN
 
     ```
 
-    1. Create Auto-Scaling Group
+1. Create Auto-Scaling Group
     ```
     ASG_NAME=asg-$UNIQ
     aws autoscaling create-auto-scaling-group \
@@ -516,11 +542,11 @@ Create VPC
 
     ```
 
-    1. Terminate instance
+1. Terminate instance
     ```
     aws ec2 terminate-instances --instance-ids $INSTANCE_ID
     ```
-    1. (Optional) Create Route53 Record
+1. (Optional) Create Route53 Record
     ```
     ZONE_NAME=id42.cc
     ZONE_ID=Z04998672H3BXHYZIROP3
