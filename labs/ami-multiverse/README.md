@@ -19,8 +19,17 @@ OUT=demo-multiverse-1.0.0-SNAPSHOT-runner.jar
 curl -Ls $URL --output $OUT
 ```
 
+Add database configuration to .env
+```
+QUARKUS_DATASOURCE_DB_KIND=mysql
+QUARKUS_DATASOURCE_USERNAME=appuser
+QUARKUS_DATASOURCE_PASSWORD=Masterkey123
+QUARKUS_DATASOURCE_JDBC_URL=jdbc:mysql://rdshost:5432/appdb
+```
+
 Add to/etc/rc.d/rc.local:
 ```
+cd /home/ec2-user/demo-multiverse/
 sudo -u ec2-user bash -c '/home/ec2-user/.sdkman/candidates/java/current/bin/java -jar /home/ec2-user/demo-multiverse/demo-multiverse-1.0.0-SNAPSHOT-runner.jar'
 ```
 
