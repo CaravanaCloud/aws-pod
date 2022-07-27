@@ -360,11 +360,14 @@ Create VPC
     ```
     echo  "https://$AWS_REGION.console.aws.amazon.com/systems-manager/session-manager/$INSTANCE_ID?region=$AWS_REGION"
     ```
+1. Check user
+    ```
+    whoami
+    sudo su - ec2-user
+    ```
 1. Install Java
     ```
-    sudo su - ec2-user
-
-    JAVA_VERSION=22.1.0.r17-grl
+    JAVA_VERSION=22.1.0.1.r17-gln
     curl -s "https://get.sdkman.io" | bash
     source "/home/ec2-user/.sdkman/bin/sdkman-init.sh"
     sdk install java $JAVA_VERSION
