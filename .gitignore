@@ -40,3 +40,4 @@ nb-configuration.xml
 
 scripts/.env-remote
 .*
+tmp
