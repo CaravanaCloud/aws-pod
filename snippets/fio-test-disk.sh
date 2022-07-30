@@ -28,7 +28,6 @@ fio
   # Reduce gettimeofday() calls
   --gtod_reduce=1 \
 
-
 fio \
   --filename=./testfio \
   --name=fiotest \
