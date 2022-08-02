@@ -1,17 +1,13 @@
 package multiverse.rs;
 
-import com.mysql.cj.jdbc.ConnectionImpl;
-
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import static javax.ws.rs.core.MediaType.TEXT_PLAIN;
 import javax.sql.DataSource;
-import java.sql.SQLException;
 
 @Path("_hc")
 public class HealthCheckResource {
@@ -30,10 +26,10 @@ public class HealthCheckResource {
                     return success();
                 }
             }
-        } catch (SQLException e) {
-            return error();
+        } catch (Exception e) {
+            return error(e);
         }
-        return error();
+        return error(null);
     }
 
     private Response success() {
@@ -42,7 +38,10 @@ public class HealthCheckResource {
                 .build();
     }
 
-    private Response error() {
+    private Response error(Exception e) {
+        if (e != null) {
+            e.printStackTrace();
+        }
         return Response.serverError()
                 .entity("Health Check Failed")
                 .build();
