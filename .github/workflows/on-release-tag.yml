@@ -27,6 +27,9 @@ jobs:
           components: 'native-image'
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set release tag
+        run: echo "RELEASE_TAG=v$(date +%Y%m%d%H%M%S)" >> $GITHUB_EN
+
       - name: Build uberjar
         env:
           MVN_FLAGS: -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
@@ -43,8 +46,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          release_name: Multiverse Demo ${{ env.RELEASE_TAG }}
           draft: false
           prerelease: false
 
