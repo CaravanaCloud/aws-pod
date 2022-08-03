@@ -10,8 +10,10 @@ import javax.inject.Inject;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
+import javax.transaction.Transactional;
 import java.util.List;
 @ApplicationScoped
+@Transactional
 public class TileRepoJPA implements Repo<Tile> {
     @Inject
     EntityManager em;
@@ -24,7 +26,7 @@ public class TileRepoJPA implements Repo<Tile> {
 
     @Override
     public List<Tile> findAll() {
-        return em.createNamedQuery("Tile.findAll", Tile.class)
+        return em.createQuery("select t from Tile t")
                 .getResultList();
     }
 
