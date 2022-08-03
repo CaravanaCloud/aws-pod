@@ -20,17 +20,19 @@ jobs:
       - name: Check out repository code
         uses: actions/checkout@v2
 
-      - uses: DeLaGuardo/setup-graalvm@5.0
-        with:
-          graalvm: ${{ env.GRAALVM_VERSION }}
-          java: ${{ env.GRAALVM_JAVA }}
-          arch: ${{ env.GRAALVM_ARCH }}
+      - uses: graalvm/setup-graalvm@v1
+          with:
+            version: 'latest'
+            java-version: '17'
+            components: 'native-image'
+            github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build uberjar
         env:
           MVN_FLAGS: -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
           QUARKUS_PACKAGE_TYPE: uber-jar
-        run: ./mvnw -f ./src/demo-multiverse/pom.xml $MVN_FLAGS package
+        working-directory: ./src/demo-multiverse/
+        run: ./mvnw $MVN_FLAGS package
 
       - name: Debug
         run: find .
