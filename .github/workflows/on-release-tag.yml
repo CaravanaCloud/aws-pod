@@ -28,7 +28,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set release tag
-        run: echo "RELEASE_TAG=v$(date +%Y%m%d%H%M%S)" >> $GITHUB_EN
+        run: echo "RELEASE_TAG=v$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
 
       - name: Build uberjar
         env:
