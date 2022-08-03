@@ -36,6 +36,18 @@ public class Tile {
         return t;
     }
 
+    public static Tile empty() {
+        return new Tile();
+    }
+
+    public static Tile of(String uuid, String imgSrc, String title) {
+        var tile = empty();
+        tile.setUuid(uuid);
+        tile.setImgSrc(imgSrc);
+        tile.setTitle(title);
+        return tile;
+    }
+
     @DynamoDbPartitionKey
     public String getUuid() {
         return uuid;

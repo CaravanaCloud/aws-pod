@@ -13,7 +13,7 @@ public interface Configuration {
     @WithName("repoType")
     RepoType repoType();
 
-    @WithName("ddb.table")
+    @WithName("ddb.tables.tile")
     @WithDefault("tiles")
     String tilesTable();
 }
