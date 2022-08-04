@@ -32,7 +32,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.0.0</version>
                 <configuration>
-                    <mainClass>com.myorg.DemoMultiverseCdkApp</mainClass>
+                    <mainClass>multiverse.cdk.MultiverseApp</mainClass>
                 </configuration>
             </plugin>
         </plugins>
@@ -50,6 +50,18 @@
             <groupId>software.constructs</groupId>
             <artifactId>constructs</artifactId>
             <version>${constructs.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awscdk</groupId>
+            <artifactId>apigatewayv2-alpha</artifactId>
+            <version>${cdk.version}-alpha.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awscdk</groupId>
+            <artifactId>apigatewayv2-integrations-alpha</artifactId>
+            <version>${cdk.version}-alpha.0</version>
         </dependency>
 
         <dependency>

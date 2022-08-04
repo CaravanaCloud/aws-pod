@@ -41,3 +41,5 @@ nb-configuration.xml
 scripts/.env-remote
 .*
 tmp
+/src/demo-multiverse-cdk/cdk.out/
+target
