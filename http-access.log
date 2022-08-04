@@ -1,0 +1,6 @@
+04/Aug/2022:02:05:09 +0200 "GET / HTTP/1.1" 200 7004 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"
+04/Aug/2022:02:05:13 +0200 "GET / HTTP/1.1" 200 7004 - "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"
+04/Aug/2022:02:05:14 +0200 "GET /favicon.ico HTTP/1.1" 404 - - "http://localhost:8080/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"
+04/Aug/2022:02:07:45 +0200 "GET /favicon.ico HTTP/1.1" 404 - 10 "http://localhost:8080/images/fulls/02.jpg" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/537.36"
+127.0.0.1 - - 04/Aug/2022:02:13:37 +0200 "GET / HTTP/1.1" 200 7004
+127.0.0.1 - - 04/Aug/2022:02:13:38 +0200 "GET /favicon.ico HTTP/1.1" 404 -
