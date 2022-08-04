@@ -1,4 +1,5 @@
 #!/bin/bash -e
+# See: https://aws.amazon.com/premiumsupport/knowledge-center/execute-user-data-ec2/
 # Redirect port 80 to 8080
 iptables -A INPUT -i eth0 -p tcp --dport 80 -j ACCEPT
 iptables -A INPUT -i eth0 -p tcp --dport 8080 -j ACCEPT
@@ -10,4 +11,4 @@ wget $URL
 # Install Java
 sudo yum -y install java-11-amazon-corretto
 # Start application
-java -jar $PKG
+java -jar $PKG &
