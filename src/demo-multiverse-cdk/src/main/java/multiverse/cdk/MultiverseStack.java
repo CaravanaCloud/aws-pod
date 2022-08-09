@@ -15,7 +15,5 @@ public class MultiverseStack extends Stack {
 
     public MultiverseStack(final Construct scope, final String id, final StackProps props, BucketStack bucketStack, NetworkStack netStack, DatabaseStack dbStack, DistributionStack distroStack) {
         super(scope, id, props);
-        var bucket = bucketStack.bucket;
-        // bucket.grantRead(distroStack.oai);
     }
 }

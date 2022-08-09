@@ -64,7 +64,6 @@ public class DistributionStack extends BaseStack {
                 .s3OriginSource(staticOrigin)
                 .build();
 
-
         var apiDomainName = Utils.domainName(lambdaStack.httpApi.getApiEndpoint());
         System.out.println("API domain name: "+apiDomainName);
 
