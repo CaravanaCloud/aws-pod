@@ -4,8 +4,6 @@
 1. AWS Cli Preferences
     ```
     export AWS_PAGER=""
-    AWS_REGION=$(aws configure get region)
-    echo $AWS_REGION
     ```
 
 ### Setup VPC networking
