@@ -1,0 +1,314 @@
+# aws cloudformation create-stack --stack-name "network-$RANDOM" --template-body file://sample-network.template
+Description: Sample network stack
+Parameters:
+  EnvName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    Default: devenv
+
+  VpcCIDR:
+    Description: IP range for this VPC
+    Type: String
+    Default: 10.192.0.0/16
+
+  PublicSubnet0CIDR:
+    Description: IP range for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.192.100.0/24
+
+  PublicSubnet1CIDR:
+    Description: IP range for the public subnet in the first Availability Zone
+    Type: String
+    Default: 10.192.101.0/24
+
+  PublicSubnet2CIDR:
+    Description: IP range for the public subnet in the second Availability Zone
+    Type: String
+    Default: 10.192.102.0/24
+
+  PrivateSubnet1CIDR:
+    Description: IP range for the private subnet in the first Availability Zone
+    Type: String
+    Default: 10.192.20.0/24
+
+  PrivateSubnet2CIDR:
+    Description: IP range for the private subnet in the second Availability Zone
+    Type: String
+    Default: 10.192.21.0/24
+
+  DBPort:
+    Description: Database Port
+    Type: String
+    Default: 3306
+
+  DBAllowCidrIp:
+    Description: Database Allowed Ingress
+    Type: String
+    Default: 0.0.0.0/0
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VpcCIDR
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: !Ref EnvName
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvName}/IGW"
+
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  PublicSubnet0:
+    Type: AWS::EC2::Subnet
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs  '' ]
+      CidrBlock: !Ref PublicSubnet0CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvName}/PublicSubnet0"
+        - Key: kubernetes.io/role/elb
+          Value: "1"
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      CidrBlock: !Ref PublicSubnet1CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvName}/PublicSubnet1"
+        - Key: kubernetes.io/role/elb
+          Value: "1"
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 2, !GetAZs  '' ]
+      CidrBlock: !Ref PublicSubnet2CIDR
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvName}/PublicSubnet2"
+        - Key: kubernetes.io/role/elb
+          Value: "1"
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 0, !GetAZs  '' ]
+      CidrBlock: !Ref PrivateSubnet1CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}/PrivateSubnet1'
+        - Key: kubernetes.io/role/internal-elb
+          Value: '1'
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    DeletionPolicy: Delete
+    Properties:
+      VpcId: !Ref VPC
+      AvailabilityZone: !Select [ 1, !GetAZs  '' ]
+      CidrBlock: !Ref PrivateSubnet2CIDR
+      MapPublicIpOnLaunch: false
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}/PrivateSubnet2'
+        - Key: kubernetes.io/role/internal-elb
+          Value: '1'
+
+  NatGateway1EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}/NATIP1'
+
+  NatGateway2EIP:
+    Type: AWS::EC2::EIP
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}/NATIP2'
+
+  NatGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway1EIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}/NAT1'
+
+  NatGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NatGateway2EIP.AllocationId
+      SubnetId: !Ref PublicSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}/NAT2'
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}/PublicRouteTable'
+
+  DefaultPublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: InternetGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnet0RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet0
+
+  PublicSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet1
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      SubnetId: !Ref PublicSubnet2
+
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}/PrivateRouteTable1'
+
+  DefaultPrivateRoute1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway1
+
+  PrivateSubnet1RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      SubnetId: !Ref PrivateSubnet1
+
+  PrivateRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}/PrivateRouteTable2'
+
+  DefaultPrivateRoute2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NatGateway2
+
+  PrivateSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable2
+      SubnetId: !Ref PrivateSubnet2
+
+Outputs:
+  StackName:
+    Description: Name of the created stack
+    Value: !Ref AWS::StackName
+    Export:
+      Name: !Sub "${EnvName}::STACK"
+
+  VPC:
+    Description: A reference to the created VPC
+    Value: !Ref VPC
+    Export:
+      Name: !Sub "${EnvName}::VPCID"
+
+  PublicSubnets:
+    Description: The list of the public subnets (YAML style A)
+    Value: !Join
+      - ','
+      - - !Ref PublicSubnet0
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+    Export:
+      Name: !Sub "${EnvName}::PUBNETS"
+
+  PrivateSubnets:
+    Description: The list of the private subnets (YAML style B)
+    Value: !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2 ]]
+    Export:
+      Name: !Sub "${EnvName}::PRIVNETS"
+
+  PublicSubnet0:
+    Description: A reference to the public subnet in the 1st Availability Zone
+    Value: !Ref PublicSubnet0
+    Export:
+      Name: !Sub "${EnvName}::PUBNET0"
+
+
+  PublicSubnet1:
+    Description: A reference to the public subnet in the 2nd Availability Zone
+    Value: !Ref PublicSubnet1
+    Export:
+      Name: !Sub "${EnvName}::PUBNET1"
+
+  PublicSubnet2:
+    Description: A reference to the public subnet in the 3rd Availability Zone
+    Value: !Ref PublicSubnet2
+    Export:
+      Name: !Sub "${EnvName}::PUBNET2"
+
+  PrivateSubnet1:
+    Description: A reference to the private subnet in the 1st Availability Zone
+    Value: !Ref PrivateSubnet1
+    Export:
+      Name: !Sub "${EnvName}::PVTNET1"
+
+  PrivateSubnet2:
+    Description: A reference to the private subnet in the 2nd Availability Zone
+    Value: !Ref PrivateSubnet2
+    Export:
+      Name: !Sub "${EnvName}::PVTNET2"
+

@@ -27,4 +27,4 @@ vscode:
     - redhat.java
     - redhat.fabric8-analytics
     - ms-azuretools.vscode-docker
-
+    - aws-scripting-guy.cform

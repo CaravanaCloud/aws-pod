@@ -1,0 +1,28 @@
+# export AWS_BUCKET="aws-pod-$USER"
+# aws s3 mb s3://$AWS_BUCKET
+# aws cloudformation package --template-file sample-nested.template --s3-bucket $AWS_BUCKET --output-template-file .sample-package.template
+# aws cloudformation deploy --template-file .sample-package.template --stack-name "nested-$RANDOM" --capabilities CAPABILITY_IAM
+Description: Sample nested stack
+Resources:
+    BucketStack:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: "sample-bucket.template"
+    NetworkStack:
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: "sample-network.template"
+    DatabaseStack:
+        DependsOn: NetworkStack
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: "sample-database.template"
+    InstanceStack:
+        DependsOn: DatabaseStack
+        Type: AWS::CloudFormation::Stack
+        Properties:
+            TemplateURL: "sample-instance.template"
+Outputs:
+    BucketName:
+        Value: !GetAtt 'BucketStack.Outputs.BucketName'
+        Description: The name of the S3 bucket

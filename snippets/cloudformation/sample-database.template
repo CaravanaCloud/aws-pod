@@ -1,0 +1,74 @@
+# aws cloudformation create-stack --stack-name "database-$RANDOM" --template-body file://sample-database.template
+Description: Database sample template
+
+Parameters:
+  EnvName:
+    Type: String
+    Default: "devenv"
+  MasterUsername:
+    Type: String
+    Default: "root"
+  MasterUserPassword:
+    Type: String
+    Default: "Masterkey123"
+  DBInstanceClass:
+    Type: String
+    Default: "db.t3.medium"
+
+Resources:
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Security Group for Database"
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${EnvName}::VPCID"
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}/DatabaseSecurityGroup'
+
+  DatabaseIngress:
+    Type: 'AWS::EC2::SecurityGroupIngress'
+    Properties:
+      GroupId: !Ref 'DatabaseSecurityGroup'
+      IpProtocol: 'tcp'
+      FromPort: '3306'
+      ToPort: '3306'
+      SourceSecurityGroupId: !GetAtt 'DatabaseSecurityGroup.GroupId'
+
+  DatabaseSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet Group for RDS
+      SubnetIds:
+        - Fn::ImportValue:
+            !Sub "${EnvName}::PUBNET0"
+        - Fn::ImportValue:
+            !Sub "${EnvName}::PUBNET1"
+        - Fn::ImportValue:
+            !Sub "${EnvName}::PUBNET2"
+
+  DatabaseCluster:
+    Type: AWS::RDS::DBCluster
+    Properties:
+      Engine: aurora
+      MasterUsername: !Ref "MasterUsername"
+      MasterUserPassword: !Ref "MasterUserPassword"
+      DBSubnetGroupName: !Ref "DatabaseSubnetGroup"
+      VpcSecurityGroupIds:
+        - !Ref "DatabaseSecurityGroup"
+
+  DatabasePrimaryInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      Engine: aurora
+      DBClusterIdentifier: !Ref "DatabaseCluster"
+      DBInstanceClass: !Ref "DBInstanceClass"
+      DBSubnetGroupName: !Ref "DatabaseSubnetGroup"
+
+Outputs:
+  DatabaseClusterId:
+    Description: DatabaseClusterId
+    Value: !Ref DatabaseCluster
+    Export:
+      Name: !Sub "${EnvName}::DBID"

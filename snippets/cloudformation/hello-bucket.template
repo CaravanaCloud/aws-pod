@@ -1,0 +1,4 @@
+# aws cloudformation create-stack --stack-name "bucket-$RANDOM" --template-body file://hello-bucket.template
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'

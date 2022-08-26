@@ -1,0 +1,13 @@
+# aws cloudformation create-stack --stack-name "bucket-$RANDOM" --template-body file://sample-bucket.template
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A sample S3 bucket
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+Outputs:
+  BucketName:
+    Value: !Ref S3Bucket
+    Description: The name of the S3 bucket
+  BucketARN:
+    Value: !GetAtt S3Bucket.Arn
+    Description: The ARN of the S3 bucket

@@ -1,0 +1,632 @@
+# aws cloudformation create-stack --stack-name "instance-$RANDOM" --template-body file://sample-instance.template
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: Sample instance template with wordpress and cfn-init features
+Parameters:
+  EnvName:
+    Type: String
+    Default: "devenv"
+  InstanceType:
+    Description: WebServer EC2 instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t1.micro
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - t3.micro
+      - t3.small
+      - t3.medium
+      - t3.large
+      - t3.xlarge
+      - t3.2xlarge
+      - m1.small
+      - m1.medium
+      - m1.large
+      - m1.xlarge
+      - m2.xlarge
+      - m2.2xlarge
+      - m2.4xlarge
+      - m3.medium
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - c1.medium
+      - c1.xlarge
+      - c3.large
+      - c3.xlarge
+      - c3.2xlarge
+      - c3.4xlarge
+      - c3.8xlarge
+      - c4.large
+      - c4.xlarge
+      - c4.2xlarge
+      - c4.4xlarge
+      - c4.8xlarge
+      - g2.2xlarge
+      - g2.8xlarge
+      - r3.large
+      - r3.xlarge
+      - r3.2xlarge
+      - r3.4xlarge
+      - r3.8xlarge
+      - i2.xlarge
+      - i2.2xlarge
+      - i2.4xlarge
+      - i2.8xlarge
+      - d2.xlarge
+      - d2.2xlarge
+      - d2.4xlarge
+      - d2.8xlarge
+      - hi1.4xlarge
+      - hs1.8xlarge
+      - cr1.8xlarge
+      - cc2.8xlarge
+      - cg1.4xlarge
+    ConstraintDescription: must be a valid EC2 instance type.
+  SSHLocation:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: '9'
+    MaxLength: '18'
+    Default: 0.0.0.0/0
+    AllowedPattern: '(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})/(\d{1,2})'
+    ConstraintDescription: must be a valid IP CIDR range of the form x.x.x.x/x.
+  DBName:
+    Default: wordpressdb
+    Description: The WordPress database name
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+  DBUser:
+    NoEcho: 'true'
+    Description: The WordPress database admin account username
+    Type: String
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric characters.
+    Default: 'wpuser'
+  DBPassword:
+    NoEcho: 'true'
+    Description: The WordPress database admin account password
+    Type: String
+    MinLength: '8'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+    Default: 'Masterkey321'
+  DBRootPassword:
+    NoEcho: 'true'
+    Description: MySQL root password
+    Type: String
+    MinLength: '8'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]*'
+    ConstraintDescription: must contain only alphanumeric characters.
+    Default: 'Masterkey123'
+
+Mappings:
+  AWSInstanceType2Arch:
+    t1.micro:
+      Arch: HVM64
+    t2.nano:
+      Arch: HVM64
+    t2.micro:
+      Arch: HVM64
+    t2.small:
+      Arch: HVM64
+    t2.medium:
+      Arch: HVM64
+    t2.large:
+      Arch: HVM64
+    m1.small:
+      Arch: HVM64
+    m1.medium:
+      Arch: HVM64
+    m1.large:
+      Arch: HVM64
+    m1.xlarge:
+      Arch: HVM64
+    m2.xlarge:
+      Arch: HVM64
+    m2.2xlarge:
+      Arch: HVM64
+    m2.4xlarge:
+      Arch: HVM64
+    m3.medium:
+      Arch: HVM64
+    m3.large:
+      Arch: HVM64
+    m3.xlarge:
+      Arch: HVM64
+    m3.2xlarge:
+      Arch: HVM64
+    m4.large:
+      Arch: HVM64
+    m4.xlarge:
+      Arch: HVM64
+    m4.2xlarge:
+      Arch: HVM64
+    m4.4xlarge:
+      Arch: HVM64
+    m4.10xlarge:
+      Arch: HVM64
+    c1.medium:
+      Arch: HVM64
+    c1.xlarge:
+      Arch: HVM64
+    c3.large:
+      Arch: HVM64
+    c3.xlarge:
+      Arch: HVM64
+    c3.2xlarge:
+      Arch: HVM64
+    c3.4xlarge:
+      Arch: HVM64
+    c3.8xlarge:
+      Arch: HVM64
+    c4.large:
+      Arch: HVM64
+    c4.xlarge:
+      Arch: HVM64
+    c4.2xlarge:
+      Arch: HVM64
+    c4.4xlarge:
+      Arch: HVM64
+    c4.8xlarge:
+      Arch: HVM64
+    g2.2xlarge:
+      Arch: HVMG2
+    g2.8xlarge:
+      Arch: HVMG2
+    r3.large:
+      Arch: HVM64
+    r3.xlarge:
+      Arch: HVM64
+    r3.2xlarge:
+      Arch: HVM64
+    r3.4xlarge:
+      Arch: HVM64
+    r3.8xlarge:
+      Arch: HVM64
+    i2.xlarge:
+      Arch: HVM64
+    i2.2xlarge:
+      Arch: HVM64
+    i2.4xlarge:
+      Arch: HVM64
+    i2.8xlarge:
+      Arch: HVM64
+    d2.xlarge:
+      Arch: HVM64
+    d2.2xlarge:
+      Arch: HVM64
+    d2.4xlarge:
+      Arch: HVM64
+    d2.8xlarge:
+      Arch: HVM64
+    hi1.4xlarge:
+      Arch: HVM64
+    hs1.8xlarge:
+      Arch: HVM64
+    cr1.8xlarge:
+      Arch: HVM64
+    cc2.8xlarge:
+      Arch: HVM64
+
+  AWSInstanceType2NATArch:
+    t1.micro:
+      Arch: NATHVM64
+    t2.nano:
+      Arch: NATHVM64
+    t2.micro:
+      Arch: NATHVM64
+    t2.small:
+      Arch: NATHVM64
+    t2.medium:
+      Arch: NATHVM64
+    t2.large:
+      Arch: NATHVM64
+    m1.small:
+      Arch: NATHVM64
+    m1.medium:
+      Arch: NATHVM64
+    m1.large:
+      Arch: NATHVM64
+    m1.xlarge:
+      Arch: NATHVM64
+    m2.xlarge:
+      Arch: NATHVM64
+    m2.2xlarge:
+      Arch: NATHVM64
+    m2.4xlarge:
+      Arch: NATHVM64
+    m3.medium:
+      Arch: NATHVM64
+    m3.large:
+      Arch: NATHVM64
+    m3.xlarge:
+      Arch: NATHVM64
+    m3.2xlarge:
+      Arch: NATHVM64
+    m4.large:
+      Arch: NATHVM64
+    m4.xlarge:
+      Arch: NATHVM64
+    m4.2xlarge:
+      Arch: NATHVM64
+    m4.4xlarge:
+      Arch: NATHVM64
+    m4.10xlarge:
+      Arch: NATHVM64
+    c1.medium:
+      Arch: NATHVM64
+    c1.xlarge:
+      Arch: NATHVM64
+    c3.large:
+      Arch: NATHVM64
+    c3.xlarge:
+      Arch: NATHVM64
+    c3.2xlarge:
+      Arch: NATHVM64
+    c3.4xlarge:
+      Arch: NATHVM64
+    c3.8xlarge:
+      Arch: NATHVM64
+    c4.large:
+      Arch: NATHVM64
+    c4.xlarge:
+      Arch: NATHVM64
+    c4.2xlarge:
+      Arch: NATHVM64
+    c4.4xlarge:
+      Arch: NATHVM64
+    c4.8xlarge:
+      Arch: NATHVM64
+    g2.2xlarge:
+      Arch: NATHVMG2
+    g2.8xlarge:
+      Arch: NATHVMG2
+    r3.large:
+      Arch: NATHVM64
+    r3.xlarge:
+      Arch: NATHVM64
+    r3.2xlarge:
+      Arch: NATHVM64
+    r3.4xlarge:
+      Arch: NATHVM64
+    r3.8xlarge:
+      Arch: NATHVM64
+    i2.xlarge:
+      Arch: NATHVM64
+    i2.2xlarge:
+      Arch: NATHVM64
+    i2.4xlarge:
+      Arch: NATHVM64
+    i2.8xlarge:
+      Arch: NATHVM64
+    d2.xlarge:
+      Arch: NATHVM64
+    d2.2xlarge:
+      Arch: NATHVM64
+    d2.4xlarge:
+      Arch: NATHVM64
+    d2.8xlarge:
+      Arch: NATHVM64
+    hi1.4xlarge:
+      Arch: NATHVM64
+    hs1.8xlarge:
+      Arch: NATHVM64
+    cr1.8xlarge:
+      Arch: NATHVM64
+    cc2.8xlarge:
+      Arch: NATHVM64
+
+  AWSRegionArch2AMI:
+    af-south-1:
+      HVM64: ami-064cc455f8a1ef504
+      HVMG2: NOT_SUPPORTED
+    ap-east-1:
+      HVM64: ami-f85b1989
+      HVMG2: NOT_SUPPORTED
+    ap-northeast-1:
+      HVM64: ami-0b2c2a754d5b4da22
+      HVMG2: ami-09d0e0e099ecabba2
+    ap-northeast-2:
+      HVM64: ami-0493ab99920f410fc
+      HVMG2: NOT_SUPPORTED
+    ap-northeast-3:
+      HVM64: ami-01344f6f63a4decc1
+      HVMG2: NOT_SUPPORTED
+    ap-south-1:
+      HVM64: ami-03cfb5e1fb4fac428
+      HVMG2: ami-0244c1d42815af84a
+    ap-southeast-1:
+      HVM64: ami-0ba35dc9caf73d1c7
+      HVMG2: ami-0e46ce0d6a87dc979
+    ap-southeast-2:
+      HVM64: ami-0ae99b503e8694028
+      HVMG2: ami-0c0ab057a101d8ff2
+    ca-central-1:
+      HVM64: ami-0803e21a2ec22f953
+      HVMG2: NOT_SUPPORTED
+    cn-north-1:
+      HVM64: ami-07a3f215cc90c889c
+      HVMG2: NOT_SUPPORTED
+    cn-northwest-1:
+      HVM64: ami-0a3b3b10f714a0ff4
+      HVMG2: NOT_SUPPORTED
+    eu-central-1:
+      HVM64: ami-0474863011a7d1541
+      HVMG2: ami-0aa1822e3eb913a11
+    eu-north-1:
+      HVM64: ami-0de4b8910494dba0f
+      HVMG2: ami-32d55b4c
+    eu-south-1:
+      HVM64: ami-08427144fe9ebdef6
+      HVMG2: NOT_SUPPORTED
+    eu-west-1:
+      HVM64: ami-015232c01a82b847b
+      HVMG2: ami-0d5299b1c6112c3c7
+    eu-west-2:
+      HVM64: ami-0765d48d7e15beb93
+      HVMG2: NOT_SUPPORTED
+    eu-west-3:
+      HVM64: ami-0caf07637eda19d9c
+      HVMG2: NOT_SUPPORTED
+    me-south-1:
+      HVM64: ami-0744743d80915b497
+      HVMG2: NOT_SUPPORTED
+    sa-east-1:
+      HVM64: ami-0a52e8a6018e92bb0
+      HVMG2: NOT_SUPPORTED
+    us-east-1:
+      HVM64: ami-032930428bf1abbff
+      HVMG2: ami-0aeb704d503081ea6
+    us-east-2:
+      HVM64: ami-027cab9a7bf0155df
+      HVMG2: NOT_SUPPORTED
+    us-west-1:
+      HVM64: ami-088c153f74339f34c
+      HVMG2: ami-0a7fc72dc0e51aa77
+    us-west-2:
+      HVM64: ami-01fee56b22f308154
+      HVMG2: ami-0fe84a5b4563d8f27
+
+Resources:
+  WebServerSecurityGroup:
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      GroupDescription: >-
+        Enable HTTP access via port 80 locked down to the load balancer + SSH
+        access
+      VpcId:
+        Fn::ImportValue:
+          !Sub "${EnvName}::VPCID"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref SSHLocation
+
+  WebServer:
+    Type: 'AWS::EC2::Instance'
+    Metadata:
+      'AWS::CloudFormation::Init':
+        configSets:
+          wordpress_install:
+            - install_cfn
+            - install_wordpress
+            - configure_wordpress
+        install_cfn:
+          files:
+            /etc/cfn/cfn-hup.conf:
+              content: !Join
+                - ''
+                - - |
+                    [main]
+                  - stack=
+                  - !Ref 'AWS::StackId'
+                  - |+
+
+                  - region=
+                  - !Ref 'AWS::Region'
+                  - |+
+
+              mode: '000400'
+              owner: root
+              group: root
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content: !Join
+                - ''
+                - - |
+                    [cfn-auto-reloader-hook]
+                  - |
+                    triggers=post.update
+                  - |
+                    path=Resources.WebServer.Metadata.AWS::CloudFormation::Init
+                  - 'action=/opt/aws/bin/cfn-init -v '
+                  - '         --stack '
+                  - !Ref 'AWS::StackName'
+                  - '         --resource WebServer '
+                  - '         --configsets wordpress_install '
+                  - '         --region '
+                  - !Ref 'AWS::Region'
+                  - |+
+
+              mode: '000400'
+              owner: root
+              group: root
+          services:
+            sysvinit:
+              cfn-hup:
+                enabled: 'true'
+                ensureRunning: 'true'
+                files:
+                  - /etc/cfn/cfn-hup.conf
+                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+        install_wordpress:
+          packages:
+            yum:
+              php73: []
+              php73-mysqlnd: []
+              mysql57: []
+              mysql57-server: []
+              mysql57-devel: []
+              mysql57-libs: []
+              httpd24: []
+          sources:
+            /var/www/html: 'http://wordpress.org/latest.tar.gz'
+          files:
+            /tmp/setup.mysql:
+              content: !Join
+                - ''
+                - - 'CREATE DATABASE '
+                  - !Ref DBName
+                  - |
+                    ;
+                  - CREATE USER '
+                  - !Ref DBUser
+                  - '''@''localhost'' IDENTIFIED BY '''
+                  - !Ref DBPassword
+                  - |
+                    ';
+                  - 'GRANT ALL ON '
+                  - !Ref DBName
+                  - .* TO '
+                  - !Ref DBUser
+                  - |
+                    '@'localhost';
+                  - |
+                    FLUSH PRIVILEGES;
+              mode: '000400'
+              owner: root
+              group: root
+            /tmp/create-wp-config:
+              content: !Join
+                - ''
+                - - |
+                    #!/bin/bash -xe
+                  - >
+                    cp /var/www/html/wordpress/wp-config-sample.php
+                    /var/www/html/wordpress/wp-config.php
+                  - sed -i "s/'database_name_here'/'
+                  - !Ref DBName
+                  - |
+                    '/g" wp-config.php
+                  - sed -i "s/'username_here'/'
+                  - !Ref DBUser
+                  - |
+                    '/g" wp-config.php
+                  - sed -i "s/'password_here'/'
+                  - !Ref DBPassword
+                  - |
+                    '/g" wp-config.php
+              mode: '000500'
+              owner: root
+              group: root
+          services:
+            sysvinit:
+              httpd:
+                enabled: 'true'
+                ensureRunning: 'true'
+              mysqld:
+                enabled: 'true'
+                ensureRunning: 'true'
+        configure_wordpress:
+          commands:
+            01_set_mysql_root_password:
+              command: !Join
+                - ''
+                - - mysqladmin -u root password '
+                  - !Ref DBRootPassword
+                  - ''''
+              test: !Join
+                - ''
+                - - '$(mysql '
+                  - !Ref DBName
+                  - ' -u root --password='''
+                  - !Ref DBRootPassword
+                  - ''' >/dev/null 2>&1 </dev/null); (( $? != 0 ))'
+            02_create_database:
+              command: !Join
+                - ''
+                - - mysql -u root --password='
+                  - !Ref DBRootPassword
+                  - ''' < /tmp/setup.mysql'
+              test: !Join
+                - ''
+                - - '$(mysql '
+                  - !Ref DBName
+                  - ' -u root --password='''
+                  - !Ref DBRootPassword
+                  - ''' >/dev/null 2>&1 </dev/null); (( $? != 0 ))'
+            03_configure_wordpress:
+              command: /tmp/create-wp-config
+              cwd: /var/www/html/wordpress
+    Properties:
+      ImageId: !FindInMap
+        - AWSRegionArch2AMI
+        - !Ref 'AWS::Region'
+        - !FindInMap
+          - AWSInstanceType2Arch
+          - !Ref InstanceType
+          - Arch
+      InstanceType: !Ref InstanceType
+      SubnetId:
+        Fn::ImportValue:
+          !Sub "${EnvName}::PUBNET1"
+      SecurityGroupIds:
+        - !Ref WebServerSecurityGroup
+      UserData: !Base64
+        'Fn::Join':
+          - ''
+          - - |
+              #!/bin/bash -xe
+            - |
+              yum update -y aws-cfn-bootstrap
+            - '/opt/aws/bin/cfn-init -v '
+            - '         --stack '
+            - !Ref 'AWS::StackName'
+            - '         --resource WebServer '
+            - '         --configsets wordpress_install '
+            - '         --region '
+            - !Ref 'AWS::Region'
+            - |+
+
+            - '/opt/aws/bin/cfn-signal -e $? '
+            - '         --stack '
+            - !Ref 'AWS::StackName'
+            - '         --resource WebServer '
+            - '         --region '
+            - !Ref 'AWS::Region'
+            - |+
+
+    CreationPolicy:
+      ResourceSignal:
+        Timeout: PT15M
+Outputs:
+  WebsiteURL:
+    Value: !Join
+      - ''
+      - - 'http://'
+        - !GetAtt
+          - WebServer
+          - PublicDnsName
+        - /wordpress
+    Description: WordPress Website
