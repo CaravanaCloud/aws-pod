@@ -12,14 +12,9 @@ public class MultiverseApp {
         App app = new App();
         var bucket = new BucketStack(app, "MultiverseBucketStack", stackProps());
         var net = new NetworkStack(app, "MultiverseNetworkStack", stackProps());
-        var db = (DatabaseStack) null;
-        /*
         var db = new DatabaseStack(app, "MultiverseDatabaseStack", stackProps(), net);
-         */
         var lambda = new LambdaStack(app, "MultiverseLambdaStack", stackProps(), net, db);
         var distro = new DistributionStack(app, "MultiverseCDNStack", stackProps(), net, bucket, lambda);
-        var mv = new MultiverseStack(app, "MultiverseStack", stackProps(), bucket, net, null, distro);
-
         app.synth();
 
     }

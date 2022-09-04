@@ -1,4 +1,4 @@
-# aws cloudformation create-stack --stack-name "network-$RANDOM" --template-body file://sample-network.template
+# aws cloudformation create-stack --stack-name "network-$RANDOM" --template-body file://sample-network.template.yaml
 Description: Sample network stack
 Parameters:
   EnvName:

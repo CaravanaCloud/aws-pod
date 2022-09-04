@@ -1,4 +1,4 @@
-# aws cloudformation create-stack --stack-name "database-$RANDOM" --template-body file://sample-database.template
+# aws cloudformation create-stack --stack-name "database-$RANDOM" --template-body file://sample-database.template.yaml
 Description: Database sample template
 
 Parameters:

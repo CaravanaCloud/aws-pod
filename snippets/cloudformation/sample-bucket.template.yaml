@@ -1,4 +1,4 @@
-# aws cloudformation create-stack --stack-name "bucket-$RANDOM" --template-body file://sample-bucket.template
+# aws cloudformation create-stack --stack-name "bucket-$RANDOM" --template-body file://sample-bucket.template.yaml
 AWSTemplateFormatVersion: "2010-09-09"
 Description: A sample S3 bucket
 Resources:

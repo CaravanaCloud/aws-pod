@@ -33,13 +33,14 @@ public class LambdaStack extends BaseStack {
         super(scope, id, props);
         var stamp = ""+System.currentTimeMillis();
 
+        var jdbcUrl = dbStack.getJdbcURL();
+        var user = dbStack.getUsername();
+        var pass = dbStack.getPassword();
         var env = Map.of(
                 "MV_REPO_TYPE", "MEM"
-                /*
-                "QUARKUS_DATASOURCE_JDBC_URL", database.getJdbcURL(),
-                "QUARKUS_DATASOURCE_PASSWORD",database.getPassword(),
-                "QUARKUS_DATASOURCE_USERNAME",database.getUsername()
-                */
+//                ,"QUARKUS_DATASOURCE_JDBC_URL", jdbcUrl
+//               ,"QUARKUS_DATASOURCE_PASSWORD", pass
+//                ,"QUARKUS_DATASOURCE_USERNAME", user
         );
 
         var adminPolicy = ManagedPolicy.fromManagedPolicyArn(this,
@@ -55,7 +56,7 @@ public class LambdaStack extends BaseStack {
         var code = Code.fromAsset("../demo-multiverse-sls/target/function.zip");
 
         var function = Function.Builder.create(this, "MultiverseLambda")
-                .functionName("MultiverseLambda-"+stamp)
+                .functionName("MultiverseLambda-1-"+stamp)
                 .timeout(Duration.minutes(5))
                 .runtime(Runtime.JAVA_11)
                 .role(lambdaRole)
