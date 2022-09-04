@@ -43,3 +43,6 @@ scripts/.env-remote
 tmp
 /src/demo-multiverse-cdk/cdk.out/
 target
+
+*.log
+package-lock.json
