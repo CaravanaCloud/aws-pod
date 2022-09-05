@@ -13,7 +13,7 @@ Parameters:
     Default: "Masterkey123"
   DBInstanceClass:
     Type: String
-    Default: "db.t3.micro"
+    Default: "db.t3.small"
 
 Resources:
   DatabaseSecurityGroup:
