@@ -27,12 +27,12 @@ phases:
       - mvn -f src/demo-multiverse/pom.xml $MVN_XOPTS install
       - mvn -f src/demo-multiverse-sls/pom.xml $MVN_XOPTS install
       - mvn -f src/demo-multiverse-cdk/pom.xml $MVN_XOPTS install
-      - cd src/demo-multiverse-cdk/ && cdk synth --all && find .
+      - cd src/demo-multiverse-cdk/ && cdk synth --all
       - echo "build fs" && find .
+      - echo 'Deploy now. or later. idk :)'
+      - cd src/demo-multiverse-cdk/ && cdk deploy --all --require-approval=never
   post_build:
     commands:
-      - echo 'Deploy now. or later. idk :)'
-#      - cd src/demo-multiverse-cdk/ && cdk deploy --all --require-approval=never
       - echo "post-build fs" && find .
 
 #reports:
