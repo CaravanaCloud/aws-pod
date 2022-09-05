@@ -64,7 +64,7 @@ public class DatabaseStack extends BaseStack  {
                 .subnetGroup(subnetGroup)
                 .securityGroups(secgs)
                 .engine(mysql8)
-                .instanceType(InstanceType.of(InstanceClass.BURSTABLE3, InstanceSize.MEDIUM))
+                .instanceType(InstanceType.of(InstanceClass.T4G, InstanceSize.MICRO))
                 .credentials(creds)
                 .multiAz(false)
                 .databaseName(databaseName)
