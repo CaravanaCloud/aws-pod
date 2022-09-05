@@ -31,7 +31,7 @@ phases:
       - cd src/demo-multiverse-cdk/
       - cdk synth --all
       - echo 'Deploy now. or later. idk :)'
-      - cdk deploy --all --require-approval=never
+#      - cdk deploy --all --require-approval=never
       - echo 'Generating artifact'
       - cd ../..
       - mkdir artifact
