@@ -36,7 +36,7 @@ phases:
       - cd ../..
       - mkdir artifact
       - cp snippets/cloudformation/* artifact/
-      - aws cloudformation package --template-file artifact/sample-nested.template.yaml --s3-bucket $AWS_BUCKET --output-template-file artifact/.sample-package.template.yaml
+      - aws cloudformation package --template-file artifact/sample-nested.template.yaml --s3-bucket $ARTIFACTS_S3_BUCKET --output-template-file artifact/.sample-package.template.yaml
       - mv artifact/.sample-package.template.yaml artifact/template.yml
       - echo 'done'
   post_build:
