@@ -1,5 +1,5 @@
 {
-    "name": "multiverse-build-2",
+    "name": "multiverse-build-nopipeline",
     "description": "Build Metaverse Demo",
     "source": {
         "type": "GITHUB",
