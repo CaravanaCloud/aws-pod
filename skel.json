@@ -1,0 +1,160 @@
+{
+    "name": "",
+    "description": "",
+    "source": {
+        "type": "CODECOMMIT",
+        "location": "",
+        "gitCloneDepth": 0,
+        "gitSubmodulesConfig": {
+            "fetchSubmodules": true
+        },
+        "buildspec": "",
+        "auth": {
+            "type": "OAUTH",
+            "resource": ""
+        },
+        "reportBuildStatus": true,
+        "buildStatusConfig": {
+            "context": "",
+            "targetUrl": ""
+        },
+        "insecureSsl": true,
+        "sourceIdentifier": ""
+    },
+    "secondarySources": [
+        {
+            "type": "GITHUB_ENTERPRISE",
+            "location": "",
+            "gitCloneDepth": 0,
+            "gitSubmodulesConfig": {
+                "fetchSubmodules": true
+            },
+            "buildspec": "",
+            "auth": {
+                "type": "OAUTH",
+                "resource": ""
+            },
+            "reportBuildStatus": true,
+            "buildStatusConfig": {
+                "context": "",
+                "targetUrl": ""
+            },
+            "insecureSsl": true,
+            "sourceIdentifier": ""
+        }
+    ],
+    "sourceVersion": "",
+    "secondarySourceVersions": [
+        {
+            "sourceIdentifier": "",
+            "sourceVersion": ""
+        }
+    ],
+    "artifacts": {
+        "type": "CODEPIPELINE",
+        "location": "",
+        "path": "",
+        "namespaceType": "BUILD_ID",
+        "name": "",
+        "packaging": "ZIP",
+        "overrideArtifactName": true,
+        "encryptionDisabled": true,
+        "artifactIdentifier": "",
+        "bucketOwnerAccess": "READ_ONLY"
+    },
+    "secondaryArtifacts": [
+        {
+            "type": "S3",
+            "location": "",
+            "path": "",
+            "namespaceType": "BUILD_ID",
+            "name": "",
+            "packaging": "ZIP",
+            "overrideArtifactName": true,
+            "encryptionDisabled": true,
+            "artifactIdentifier": "",
+            "bucketOwnerAccess": "FULL"
+        }
+    ],
+    "cache": {
+        "type": "NO_CACHE",
+        "location": "",
+        "modes": [
+            "LOCAL_SOURCE_CACHE"
+        ]
+    },
+    "environment": {
+        "type": "WINDOWS_CONTAINER",
+        "image": "",
+        "computeType": "BUILD_GENERAL1_MEDIUM",
+        "environmentVariables": [
+            {
+                "name": "",
+                "value": "",
+                "type": "PLAINTEXT"
+            }
+        ],
+        "privilegedMode": true,
+        "certificate": "",
+        "registryCredential": {
+            "credential": "",
+            "credentialProvider": "SECRETS_MANAGER"
+        },
+        "imagePullCredentialsType": "CODEBUILD"
+    },
+    "serviceRole": "",
+    "timeoutInMinutes": 0,
+    "queuedTimeoutInMinutes": 0,
+    "encryptionKey": "",
+    "tags": [
+        {
+            "key": "",
+            "value": ""
+        }
+    ],
+    "vpcConfig": {
+        "vpcId": "",
+        "subnets": [
+            ""
+        ],
+        "securityGroupIds": [
+            ""
+        ]
+    },
+    "badgeEnabled": true,
+    "logsConfig": {
+        "cloudWatchLogs": {
+            "status": "ENABLED",
+            "groupName": "",
+            "streamName": ""
+        },
+        "s3Logs": {
+            "status": "DISABLED",
+            "location": "",
+            "encryptionDisabled": true,
+            "bucketOwnerAccess": "NONE"
+        }
+    },
+    "fileSystemLocations": [
+        {
+            "type": "EFS",
+            "location": "",
+            "mountPoint": "",
+            "identifier": "",
+            "mountOptions": ""
+        }
+    ],
+    "buildBatchConfig": {
+        "serviceRole": "",
+        "combineArtifacts": true,
+        "restrictions": {
+            "maximumBuildsAllowed": 0,
+            "computeTypesAllowed": [
+                ""
+            ]
+        },
+        "timeoutInMins": 0,
+        "batchReportMode": "REPORT_INDIVIDUAL_BUILDS"
+    },
+    "concurrentBuildLimit": 0
+}

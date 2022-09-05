@@ -1,0 +1,1 @@
+aws codebuild create-project --cli-input-json file://codebuild-skel.json 

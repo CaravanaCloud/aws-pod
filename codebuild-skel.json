@@ -1,0 +1,24 @@
+{
+    "name": "multiverse-build",
+    "description": "Build Metaverse Demo",
+    "source": {
+        "type": "GITHUB",
+        "location": "https://github.com/CaravanaCloud/aws-pod"
+    },
+    "environment": {
+        "type": "LINUX_CONTAINER",
+        "image": "aws/codebuild/amazonlinux2-x86_64-standard:4.0",
+        "computeType": "BUILD_GENERAL1_2XLARGE",
+        "environmentVariables": [
+            {
+                "name": "QUARKUS_PROFILE",
+                "value": "prod",
+                "type": "PLAINTEXT"
+            }
+        ]
+    },
+    "artifacts":{
+        "type": "NO_ARTIFACTS"
+    },
+    "serviceRole": "arn:aws:iam::192912639870:role/service-role/codebuild-aws-pod-service-role"
+}
