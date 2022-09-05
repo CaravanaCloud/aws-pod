@@ -14,6 +14,7 @@ phases:
       - echo Install SDK and tools
       - curl -s "https://get.sdkman.io" | bash
       - source "/root/.sdkman/bin/sdkman-init.sh" && sdk install java 11.0.16-amzn && sdk install maven
+      - npm install -g aws-cdk
 #    finally:
 #      - echo This always runs even if the update or install command fails 
   pre_build:
