@@ -32,10 +32,16 @@ phases:
       - cdk synth --all
       - echo 'Deploy now. or later. idk :)'
       - cdk deploy --all --require-approval=never
-      - echo 'done' 
+      - echo 'Generating artifact'
+      - cd ../..
+      - mkdir artifact
+      - cp snippets/cloudformation/* artifact/
+      - aws cloudformation package --template-file artifact/sample-nested.template.yaml --s3-bucket $AWS_BUCKET --output-template-file artifact/.sample-package.template.yaml
+      - mv artifact/.sample-package.template.yaml artifact/template.yml
+      - echo 'done'
   post_build:
     commands:
-      - echo "post-build fs" && find .
+      - echo "post-build [$PWD]" && find .
 
 #reports:
 #  arn:aws:codebuild:your-region:your-aws-account-id:report-group/report-group-name-1:
