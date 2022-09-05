@@ -3,6 +3,7 @@ version: 0.2
 env:
   variables:
     QUARKUS_PROFILE: "prod"
+    MVN_XOPTS: "-B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn"
 #    JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
 #  parameter-store:
 #    LOGIN_PASSWORD: /CodeBuild/dockerLoginPassword
@@ -22,7 +23,7 @@ phases:
   build:
     commands:
       - echo Entered the build phase...
-      - mvn -f src/demo-multiverse/pom.xml install
+      - mvn -f src/demo-multiverse/pom.xml $MVN_XOPTS install
   post_build:
     commands:
       - echo Entered the post_build phase...

@@ -1,5 +1,5 @@
 {
-    "name": "multiverse-build",
+    "name": "multiverse-build-2",
     "description": "Build Metaverse Demo",
     "source": {
         "type": "GITHUB",
@@ -8,7 +8,7 @@
     "environment": {
         "type": "LINUX_CONTAINER",
         "image": "aws/codebuild/amazonlinux2-x86_64-standard:4.0",
-        "computeType": "BUILD_GENERAL1_2XLARGE",
+        "computeType": "BUILD_GENERAL1_LARGE",
         "environmentVariables": [
             {
                 "name": "QUARKUS_PROFILE",
