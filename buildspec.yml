@@ -27,6 +27,7 @@ phases:
       - mvn -f src/demo-multiverse/pom.xml $MVN_XOPTS install
       - mvn -f src/demo-multiverse-sls/pom.xml $MVN_XOPTS install
       - mvn -f src/demo-multiverse-cdk/pom.xml $MVN_XOPTS install
+      - cd src/demo-multiverse-cdk/ && cdk synth --all && find .
   post_build:
     commands:
       - echo 'Deploy now. or later. idk :)'
