@@ -11,22 +11,24 @@ env:
 phases:
   install:
     commands:
-      - echo Entered the install phase...
+      - echo Install SDK and tools
       - curl -s "https://get.sdkman.io" | bash
       - source "/root/.sdkman/bin/sdkman-init.sh" && sdk install java 11.0.16-amzn && sdk install maven
 #    finally:
 #      - echo This always runs even if the update or install command fails 
   pre_build:
     commands:
-      - echo Entered the pre_build phase...
+      - echo Login before build
 #      - docker login -u User -p $LOGIN_PASSWORD
   build:
     commands:
-      - echo Entered the build phase...
+      - echo Build the packages
       - mvn -f src/demo-multiverse/pom.xml $MVN_XOPTS install
+      - mvn -f src/demo-multiverse-sls/pom.xml $MVN_XOPTS install
+      - mvn -f src/demo-multiverse-cdk/pom.xml $MVN_XOPTS install
   post_build:
     commands:
-      - echo Entered the post_build phase...
+      - echo Deploy now! or later, idk :)
       - echo Build completed on `date`
 
 #reports:
