@@ -12,6 +12,9 @@ phases:
     commands:
       - echo Entered the install phase...
       - curl -s "https://get.sdkman.io" | bash
+      - source "/root/.sdkman/bin/sdkman-init.sh"
+      - sdk install java 11.0.16-amzn
+      - sdk install maven
 #    finally:
 #      - echo This always runs even if the update or install command fails 
   pre_build:
@@ -21,6 +24,7 @@ phases:
   build:
     commands:
       - echo Entered the build phase...
+      - mvn -f src/demo-multiverse/pom.xml install
   post_build:
     commands:
       - echo Entered the post_build phase...
