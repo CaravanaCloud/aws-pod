@@ -57,7 +57,7 @@ phases:
 artifacts:
   files:
     - artifact/template.yml
-    - artifact/template-config.json
+    - artifact/template-configuration.json
   discard-paths: yes
 #  secondary-artifacts:
 #    artifact1:
