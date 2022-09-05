@@ -32,7 +32,7 @@ phases:
   post_build:
     commands:
       - echo 'Deploy now. or later. idk :)'
-      - cd src/demo-multiverse-cdk/ && cdk deploy --all --require-approval=never
+#      - cd src/demo-multiverse-cdk/ && cdk deploy --all --require-approval=never
       - echo "post-build fs" && find .
 
 #reports:
