@@ -1,7 +1,8 @@
 version: 0.2
 
 env:
-#  variables:
+  variables:
+    QUARKUS_PROFILE: "prod"
 #    JAVA_HOME: "/usr/lib/jvm/java-8-openjdk-amd64"
 #  parameter-store:
 #    LOGIN_PASSWORD: /CodeBuild/dockerLoginPassword
