@@ -1,0 +1,103 @@
+# aws cloudformation create-stack --stack-name "build-$RANDOM" --template-body file://sample-codebuild.template.yaml --capabilities CAPABILITY_IAM
+# aws cloudformation deploy --stack-name "build-$RANDOM" --template-file sample-codebuild.template.yaml --capabilities CAPABILITY_IAM
+Description: CodeBuild project for aws-pod
+
+Parameters:
+  EnvName:
+    Description: An environment name that is prefixed to resource names
+    Type: String
+    Default: devenv
+
+Resources:
+  ArtifactsBucket:
+    Type: 'AWS::S3::Bucket'
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      ServiceRole: !GetAtt CodeBuildRole.Arn
+      Artifacts:
+        Type: NO_ARTIFACTS
+      Environment:
+        Type: LINUX_CONTAINER
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: "aws/codebuild/amazonlinux2-x86_64-standard:4.0"
+        EnvironmentVariables:
+          - Name: QUARKUS_PROFILE
+            Value: prod
+            Type: PLAINTEXT
+          - Name: ARTIFACTS_S3_BUCKET
+            Value: !Ref ArtifactsBucket
+            Type: PLAINTEXT
+      Source:
+        Type: GITHUB
+        Location: "https://github.com/CaravanaCloud/aws-pod"
+      TimeoutInMinutes: 15
+      VpcConfig:
+        VpcId:
+          Fn::ImportValue:
+            !Sub "${EnvName}::VPCID"
+        Subnets:
+          - Fn::ImportValue:
+              !Sub "${EnvName}::PVTNET1"
+          - Fn::ImportValue:
+              !Sub "${EnvName}::PVTNET2"
+        SecurityGroupIds: [!Ref CodeBuildSecurityGroup]
+      Cache:
+        Type: S3
+        Location: !Sub "${ArtifactsBucket}/cache"
+  CodeBuildRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action: ['sts:AssumeRole']
+          Effect: Allow
+          Principal:
+            Service: [codebuild.amazonaws.com]
+        Version: '2012-10-17'
+      Path: /
+      Policies:
+        - PolicyName: CodeBuildAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Action:
+                - 'logs:*'
+                - 'ec2:CreateNetworkInterface'
+                - 'ec2:DescribeNetworkInterfaces'
+                - 'ec2:DeleteNetworkInterface'
+                - 'ec2:DescribeSubnets'
+                - 'ec2:DescribeSecurityGroups'
+                - 'ec2:DescribeDhcpOptions'
+                - 'ec2:DescribeVpcs'
+                - 'ec2:CreateNetworkInterfacePermission'
+                Effect: Allow
+                Resource: '*'
+  CodeBuildVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      Tags:
+        - Key: name
+          Value: codebuild
+  CodeBuildSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId:
+        Ref: CodeBuildVPC
+      CidrBlock: 10.0.1.0/24
+  CodeBuildSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: Codebuild Internet Group
+      GroupDescription: 'CodeBuild SecurityGroup'
+      VpcId: 
+        Fn::ImportValue:
+          !Sub "${EnvName}::VPCID"
+
+Outputs:
+  CodeBuildProjectRef:
+    Description: Code Build Project
+    Value: !Ref CodeBuildProject
