@@ -3,7 +3,7 @@ FROM gitpod/workspace-mysql
 # OS Packages
 RUN bash -c "sudo install-packages gettext tmux htop"
 # Brew packages
-RUN bash -c "brew install gh fio golang cowsay lolcat"
+RUN bash -c "brew install gh fio golang cowsay lolcat terraform"
 # Java, Maven and Quarkus
 ARG JAVA_VERSION=22.2.r17-grl
 RUN bash -c ". /home/gitpod/.sdkman/bin/sdkman-init.sh && sdk install java ${JAVA_VERSION} && sdk default java ${JAVA_VERSION} && sdk install maven &&  sdk install quarkus"
