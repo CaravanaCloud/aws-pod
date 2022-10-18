@@ -1,4 +1,5 @@
 # aws sts get-caller-identity
+# cd labs/vpc-debug/tf/
 # terraform init
 # terraform apply -auto-approve
 # terraform destroy -auto-approve
