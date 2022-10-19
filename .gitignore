@@ -46,3 +46,5 @@ target
 
 *.log
 package-lock.json
+
+terraform.*
